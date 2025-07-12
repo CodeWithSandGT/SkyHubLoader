@@ -3,7 +3,7 @@ local Window = OrionLib:MakeWindow({Name = "SkyHub", HidePremium = false, SaveCo
 
 local MainTab = Window:MakeTab({
 	Name = "Main",
-	Icon = "rbxassetid://4483345998",
+	Icon = "rbxassetid://",
 	PremiumOnly = false
 })
 
