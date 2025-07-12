@@ -13,7 +13,7 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Simpan referensi nilai input
+-- Variabel untuk menyimpan input dari textbox
 local inputCashValue = "1000000"
 
 MainTab:AddTextbox({
@@ -21,23 +21,24 @@ MainTab:AddTextbox({
     Default = inputCashValue,
     TextDisappear = false,
     Callback = function(Value)
-        inputCashValue = Value -- cukup simpan string-nya, parse nanti
+        inputCashValue = Value
     end
 })
 
+-- Tombol untuk inject (tambah uang)
 MainTab:AddButton({
     Name = "Inject Cash",
     Callback = function()
         local amount = tonumber(inputCashValue)
         if amount and amount > 0 then
-            local amountToSend = -math.abs(amount)
+            local amountToSend = -math.abs(amount) -- negatif untuk tambah uang
             local success, err = pcall(function()
                 game:GetService("ReplicatedStorage").Purchase_Crate:FireServer(amountToSend)
             end)
             if success then
                 OrionLib:MakeNotification({
                     Name = "Success",
-                    Content = "Injected: R$" .. tostring(amountToSend),
+                    Content = "Injected: R$" .. tostring(math.abs(amountToSend)),
                     Image = "rbxassetid://4483345998",
                     Time = 5
                 })
@@ -61,6 +62,44 @@ MainTab:AddButton({
     end
 })
 
+-- Tombol untuk remove (kurangi uang)
+MainTab:AddButton({
+    Name = "Remove Cash",
+    Callback = function()
+        local amount = tonumber(inputCashValue)
+        if amount and amount > 0 then
+            local amountToSend = math.abs(amount) -- positif untuk kurangi uang
+            local success, err = pcall(function()
+                game:GetService("ReplicatedStorage").Purchase_Crate:FireServer(amountToSend)
+            end)
+            if success then
+                OrionLib:MakeNotification({
+                    Name = "Success",
+                    Content = "Removed: R$" .. tostring(amountToSend),
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+            else
+                warn("Gagal remove:", err)
+                OrionLib:MakeNotification({
+                    Name = "Error",
+                    Content = "Gagal remove: " .. tostring(err),
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+            end
+        else
+            OrionLib:MakeNotification({
+                Name = "Warning",
+                Content = "Masukkan angka yang valid terlebih dahulu!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        end
+    end
+})
+
+-- Tab Kredit
 local CreditTab = Window:MakeTab({
     Name = "Credit",
     Icon = "rbxassetid://4483345998",
@@ -70,7 +109,7 @@ local CreditTab = Window:MakeTab({
 CreditTab:AddLabel("Join our Discord: https://dsc.gg/skyhubs")
 CreditTab:AddLabel("Youtube: https://youtube.com/@skyhubcommunitys")
 
--- Notifikasi setiap 1 menit
+-- Notifikasi support tiap 1 menit
 task.spawn(function()
     while true do
         OrionLib:MakeNotification({
