@@ -13,34 +13,24 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Variabel untuk menyimpan input uang
-local targetCash = 0
+-- Simpan referensi nilai input
+local inputCashValue = "1000000"
 
 MainTab:AddTextbox({
     Name = "Input Cash Amount",
-    Default = "1000000",
+    Default = inputCashValue,
     TextDisappear = false,
     Callback = function(Value)
-        local num = tonumber(Value)
-        if num then
-            targetCash = math.abs(num) -- Simpan sebagai positif dulu
-            print("Target cash set to:", targetCash)
-        else
-            OrionLib:MakeNotification({
-                Name = "Error",
-                Content = "Input harus angka!",
-                Image = "rbxassetid://4483345998",
-                Time = 4
-            })
-        end
+        inputCashValue = Value -- cukup simpan string-nya, parse nanti
     end
 })
 
 MainTab:AddButton({
     Name = "Inject Cash",
     Callback = function()
-        if targetCash and targetCash > 0 then
-            local amountToSend = -targetCash
+        local amount = tonumber(inputCashValue)
+        if amount and amount > 0 then
+            local amountToSend = -math.abs(amount)
             local success, err = pcall(function()
                 game:GetService("ReplicatedStorage").Purchase_Crate:FireServer(amountToSend)
             end)
@@ -52,7 +42,7 @@ MainTab:AddButton({
                     Time = 5
                 })
             else
-                warn("Failed to send cash:", err)
+                warn("Gagal inject:", err)
                 OrionLib:MakeNotification({
                     Name = "Error",
                     Content = "Gagal inject: " .. tostring(err),
@@ -63,9 +53,9 @@ MainTab:AddButton({
         else
             OrionLib:MakeNotification({
                 Name = "Warning",
-                Content = "Masukkan jumlah uang dulu di textbox!",
+                Content = "Masukkan angka yang valid terlebih dahulu!",
                 Image = "rbxassetid://4483345998",
-                Time = 5
+                Time = 4
             })
         end
     end
