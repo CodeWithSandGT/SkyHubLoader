@@ -1,66 +1,198 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "SkyHub", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest", IntroText = "SkyHub"})
+local Window = OrionLib:MakeWindow({Name = "SkyHub Premium", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest", IntroText = "SkyHub Premium"})
 
 local MainTab = Window:MakeTab({
-	Name = "Main",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
-local autoSummitRunning = false -- Flag kontrol Auto Summit
-local autoSummitThread -- Thread loop
+-- Fungsi untuk mencari prompt terdekat (kecuali PromptDriveSeat)
+local function findNearestPrompt(position, maxDistance, excludePromptName)
+    local nearestPrompt = nil
+    local nearestDistance = maxDistance
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            -- Menghindari mencari PromptDriveSeat saat mencari prompt untuk spawn mobil
+            if obj.Name ~= excludePromptName then
+                local promptPosition = obj.Parent and obj.Parent:IsA("BasePart") and obj.Parent.Position
+                if promptPosition then
+                    local distance = (promptPosition - position).magnitude
+                    if distance < nearestDistance then
+                        nearestPrompt = obj
+                        nearestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+
+    return nearestPrompt
+end
+
+-- Fungsi untuk teleport pemain dan mobil
+local function teleportPlayerAndCar(targetCFrame)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+    local playerCar = game.Workspace.Vehicles[player.Name .. "sCar"]
+
+    if playerCar and playerCar.PrimaryPart and humanoidRootPart then
+        playerCar:SetPrimaryPartCFrame(targetCFrame)
+        humanoidRootPart.CFrame = targetCFrame + Vector3.new(0, 5, 0) -- Sedikit di atas kendaraan
+        print("Player and Vehicle teleported successfully!")
+    else
+        print("Error: Player car or HumanoidRootPart not found!")
+    end
+end
+
+-- Menambahkan input untuk mengatur delay teleport
+local teleportDelay = 80 -- default delay in seconds
+
+MainTab:AddTextbox({
+    Name = "Teleport Delay (seconds)",
+    Default = "80", -- Set default delay value
+    TextDisappear = true,
+    Callback = function(Value)
+        teleportDelay = tonumber(Value) or 80 -- Update delay value from textbox input
+        print("Teleport delay set to: " .. teleportDelay .. " seconds")
+    end
+})
 
 MainTab:AddButton({
-	Name = "Start Auto Summit",
-	Callback = function()
-		if autoSummitRunning then return end -- Cegah duplikasi loop
-		autoSummitRunning = true
+    Name = "Auto truck job",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
 
-		autoSummitThread = task.spawn(function()
-			local Players = game:GetService("Players")
-			local player = Players.LocalPlayer
+        if humanoidRootPart then
+            -- 1️⃣ Teleport ke Farm Truck untuk memulai pekerjaan
+            humanoidRootPart.CFrame = CFrame.new(-21799.832, 1042.651, -26797.654)
+            print("Teleported to Farm Truck coordinates!")
+            task.wait(1)
 
-			-- Posisi target teleport (Summit)
-			local targetPosition = Vector3.new(-655.8443, 1081.6111, 281.3544)
+            -- 2️⃣ Jalankan prompt otomatis di Starter untuk Start Job
+            local farmPrompt = workspace:FindFirstChild("Etc") 
+                and workspace.Etc:FindFirstChild("Job") 
+                and workspace.Etc.Job:FindFirstChild("Truck") 
+                and workspace.Etc.Job.Truck:FindFirstChild("Starter") 
+                and workspace.Etc.Job.Truck.Starter:FindFirstChild("Prompt")
 
-			-- Fungsi teleport ke posisi
-			local function teleportToPosition()
-				local character = player.Character
-				if character and character:FindFirstChild("HumanoidRootPart") then
-					character:MoveTo(targetPosition)
-				end
-			end
+            if farmPrompt and farmPrompt:IsA("ProximityPrompt") then
+                fireproximityprompt(farmPrompt)
+                print("🚛 Start Job Prompt activated!")
+            else
+                print("❌ Error: Farm Truck Start Job Prompt not found!")
+            end
 
-			-- Fungsi reset karakter (bunuh Humanoid)
-			local function killCharacter()
-				local character = player.Character
-				if character and character:FindFirstChild("Humanoid") then
-					character.Humanoid.Health = 0
-				end
-			end
+            task.wait(2)
 
-			-- Loop utama
-			while autoSummitRunning do
-				if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-					player.CharacterAdded:Wait()
-					task.wait(1)
-				end
+            -- 3️⃣ Teleport ke Spawner
+            humanoidRootPart.CFrame = CFrame.new(-21764.222, 1046.442, -26782.435)
+            print("Teleported to Truck Spawner Location!")
+            task.wait(1)
 
-				teleportToPosition()
-				task.wait(1)
+            -- 4️⃣ Jalankan prompt untuk spawn truk (hindari PromptDriveSeat)
+            local spawnerPrompt = findNearestPrompt(humanoidRootPart.Position, 10, "PromptDriveSeat")
+            if spawnerPrompt then
+                fireproximityprompt(spawnerPrompt)
+                print("✅ Truck spawned successfully!")
+            else
+                print("❌ No ProximityPrompt found near Spawner!")
+            end
 
-				killCharacter()
+            task.wait(3)  -- Memberikan delay 2 detik setelah spawn
 
-				player.CharacterAdded:Wait()
-				task.wait(1)
-			end
-		end)
-	end
+            -- 5️⃣ Masuk ke dalam kendaraan (mencari PromptDriveSeat setelah spawn)
+            local playerCar = game.Workspace.Vehicles[player.Name .. "sCar"]
+            local carDriveSeatPrompt = nil
+            for _, obj in ipairs(playerCar:GetDescendants()) do
+                if obj:IsA("ProximityPrompt") and obj.Name == "PromptDriveSeat" then
+                    carDriveSeatPrompt = obj
+                    break
+                end
+            end
+
+            if carDriveSeatPrompt then
+                -- Masuk ke kendaraan menggunakan PromptDriveSeat
+                fireproximityprompt(carDriveSeatPrompt)
+                print("🚗 Entered vehicle successfully!")
+            else
+                print("❌ No PromptDriveSeat found for the vehicle!")
+            end
+
+            task.wait(teleportDelay)  -- Use the delay set by the user
+
+            -- 6️⃣ Teleport kendaraan ke Waypoint dan lakukan secara terus menerus
+            local waypointFolder = workspace:FindFirstChild("Etc") and workspace.Etc:FindFirstChild("Waypoint")
+            local targetWaypoint = waypointFolder and waypointFolder:FindFirstChild("Waypoint")
+
+            if targetWaypoint and targetWaypoint:IsA("BasePart") then
+                -- Lakukan teleportasi secara terus menerus dengan delay yang sama
+                while true do
+                    teleportPlayerAndCar(targetWaypoint.CFrame)
+                    print("🏁 Successfully teleported to Waypoint!")
+                    task.wait(teleportDelay)  -- Delay sebelum teleportasi berikutnya
+                end
+            else
+                print("❌ Error: Target Waypoint not found!")
+            end
+        else
+            print("❌ Error: HumanoidRootPart not found for the player!")
+        end
+    end    
 })
 
 MainTab:AddButton({
-	Name = "Stop Auto Summit",
-	Callback = function()
-		autoSummitRunning = false
-	end
+    Name = "Anti Kick",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local oldNamecall
+
+        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = getnamecallmethod()
+
+            -- Only block the kick if it's being called in suspicious contexts (not always)
+            if method == "Kick" or method == "kick" then
+                warn("Kick attempt blocked!")
+                return  -- Prevent the kick from happening
+            end
+
+            return oldNamecall(self, ...)  -- Continue with normal calls for other methods
+        end)
+    end
 })
+
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+MainTab:AddButton({
+    Name = "Rejoin",
+    Callback = function()
+        local player = Players.LocalPlayer
+        local placeId = game.PlaceId
+        local serverId = game.JobId
+
+        -- Cek apakah ada JobSignal di ReplicatedStorage
+        local jobSignal = ReplicatedStorage:FindFirstChild("Shared") and ReplicatedStorage.Shared:FindFirstChild("JobSignal")
+
+        if jobSignal and jobSignal:IsA("StringValue") then
+            serverId = jobSignal.Value -- Gunakan JobSignal sebagai serverId jika tersedia
+        end
+
+        -- Cek apakah pemain berada di private server
+        if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then
+            -- Jika di private server, gunakan metode aman
+            TeleportService:Teleport(placeId, player)
+        else
+            -- Jika di public server atau JobSignal tersedia, teleport ke instance yang benar
+            TeleportService:TeleportToPlaceInstance(placeId, serverId, player)
+        end
+    end
+})
+
+
+
