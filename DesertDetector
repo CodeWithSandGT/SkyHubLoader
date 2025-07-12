@@ -13,72 +13,57 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Flag untuk kontrol loop
-local autoSummitRunning = false
-local autoSummitThread
+-- Variabel untuk menyimpan input uang
+local targetCash = 0
 
-MainTab:AddButton({
-    Name = "Start Auto Summit",
-    Callback = function()
-        local function isSafeEnvironment()
-            local player = game:GetService("Players").LocalPlayer
-            if not player or not player:IsDescendantOf(game) then
-                return false
-            end
-            if identifyexecutor then
-                local ex = identifyexecutor()
-                if ex and string.find(ex:lower(), "krnl") or string.find(ex:lower(), "vega") then
-                    warn("⚠️ Detected known public exploit: " .. ex)
-                end
-            end
-            return true
-        end
-
-        local infinite_cash do
-            if isSafeEnvironment() then
-                local args = -math.random(1e6, 1e9)
-                local success, err = pcall(function()
-                    game:GetService('ReplicatedStorage').Purchase_Crate:FireServer(args)
-                end)
-                if success then
-                    print("[✔] Infinite money executed safely.")
-                else
-                    warn("[✘] Error during infinite money:", err)
-                end
-            else
-                warn("Environment not safe. Aborting infinite money script.")
-            end
+MainTab:AddTextbox({
+    Name = "Input Cash Amount",
+    Default = "1000000",
+    TextDisappear = false,
+    Callback = function(Value)
+        local num = tonumber(Value)
+        if num then
+            targetCash = math.abs(num) -- Simpan sebagai positif dulu
+            print("Target cash set to:", targetCash)
+        else
+            OrionLib:MakeNotification({
+                Name = "Error",
+                Content = "Input harus angka!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
         end
     end
 })
 
--- TEXTBOX untuk input jumlah cash custom
-MainTab:AddTextbox({
-    Name = "Add Custom Cash",
-    Default = "1000000",
-    TextDisappear = true,
-    Callback = function(Value)
-        local amount = tonumber(Value)
-        if amount then
-            local negativeAmount = -math.abs(amount)
+MainTab:AddButton({
+    Name = "Inject Cash",
+    Callback = function()
+        if targetCash and targetCash > 0 then
+            local amountToSend = -targetCash
             local success, err = pcall(function()
-                game:GetService("ReplicatedStorage").Purchase_Crate:FireServer(negativeAmount)
+                game:GetService("ReplicatedStorage").Purchase_Crate:FireServer(amountToSend)
             end)
             if success then
                 OrionLib:MakeNotification({
                     Name = "Success",
-                    Content = "Injected: R$" .. tostring(negativeAmount),
+                    Content = "Injected: R$" .. tostring(amountToSend),
                     Image = "rbxassetid://4483345998",
                     Time = 5
                 })
             else
-                warn("Failed to send custom cash:", err)
+                warn("Failed to send cash:", err)
+                OrionLib:MakeNotification({
+                    Name = "Error",
+                    Content = "Gagal inject: " .. tostring(err),
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
             end
         else
-            warn("Invalid input: Not a number")
             OrionLib:MakeNotification({
-                Name = "Error",
-                Content = "Masukkan angka valid!",
+                Name = "Warning",
+                Content = "Masukkan jumlah uang dulu di textbox!",
                 Image = "rbxassetid://4483345998",
                 Time = 5
             })
