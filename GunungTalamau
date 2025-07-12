@@ -78,7 +78,7 @@ local CreditTab = Window:MakeTab({
 })
 
 CreditTab:AddLabel("Join our Discord: https://dsc.gg/skyhubs")
-CreditTab:AddLabel("Subscribe our YouTube Channel: https://youtube.com/@skyhubcommunitys?si=WBVZSNDi15Vl-bqG")
+CreditTab:AddLabel("Youtube: https://youtube.com/@skyhubcommunitys")
 
 -- Notifikasi setiap 1 menit
 task.spawn(function()
