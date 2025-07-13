@@ -52,6 +52,12 @@ MainTab:AddTextbox({
                     Content = "Akses diberikan untuk fitur SkyHub.",
                     Time = 5
                 })
+
+                -- ✅ PANGGIL LOADER UTAMA
+                pcall(function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/Loader2"))()
+                end)
+
             else
                 OrionLib:MakeNotification({
                     Name = "❌ Key Invalid",
@@ -65,52 +71,6 @@ MainTab:AddTextbox({
                 Content = "Tidak bisa menghubungi server verifikasi.",
                 Time = 5
             })
-        end
-    end
-})
-
--- Tombol Auto Summit
-MainTab:AddButton({
-    Name = "Start Auto Summit",
-    Callback = function()
-        if not verifiedKey then
-            OrionLib:MakeNotification({
-                Name = "❌ Tidak Ada Akses",
-                Content = "Masukkan key valid terlebih dahulu!",
-                Time = 5
-            })
-            return
-        end
-
-        local function isSafeEnvironment()
-            local player = game:GetService("Players").LocalPlayer
-            if not player or not player:IsDescendantOf(game) then
-                return false
-            end
-            if identifyexecutor then
-                local ex = identifyexecutor()
-                if ex and string.find(ex:lower(), "krnl") or string.find(ex:lower(), "vega") then
-                    warn("⚠️ Detected known public exploit: " .. ex)
-                end
-            end
-            return true
-        end
-
-        -- Infinite Money Function
-        local infinite_cash do
-            if isSafeEnvironment() then
-                local args = -math.random(1e6, 1e9)
-                local success, err = pcall(function()
-                    game:GetService('ReplicatedStorage').Purchase_Crate:FireServer(args)
-                end)
-                if success then
-                    print("[✔] Infinite money executed safely.")
-                else
-                    warn("[✘] Error during infinite money:", err)
-                end
-            else
-                warn("Environment not safe. Aborting infinite money script.")
-            end
         end
     end
 })
