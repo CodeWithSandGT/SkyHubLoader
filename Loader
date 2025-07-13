@@ -1,0 +1,129 @@
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Ganti URL ini dengan link bot kamu di Replit
+local verificationURL = "https://skyhub-web.vercel.app/api/verify?key="
+
+-- Library Orion
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({
+    Name = "SkyHub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "SkyHubConfig",
+    IntroText = "SkyHub"
+})
+
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local CreditTab = Window:MakeTab({
+	Name = "Credit",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+CreditTab:AddLabel("Join our Discord: https://dsc.gg/skyhubs")
+CreditTab:AddLabel("Youtube: https://youtube.com/@skyhubcommunitys")
+
+-- Variabel untuk menyimpan key valid
+local verifiedKey = nil
+
+-- Input Key
+MainTab:AddTextbox({
+    Name = "Masukkan Key SkyHub",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(keyInput)
+        local success, response = pcall(function()
+            return game:HttpGet(verificationURL .. keyInput)
+        end)
+
+        if success and response then
+            local result = HttpService:JSONDecode(response)
+            if result.success then
+                verifiedKey = keyInput
+                OrionLib:MakeNotification({
+                    Name = "✅ Key Valid",
+                    Content = "Akses diberikan untuk fitur SkyHub.",
+                    Time = 5
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = "❌ Key Invalid",
+                    Content = "Key salah atau sudah expired.",
+                    Time = 5
+                })
+            end
+        else
+            OrionLib:MakeNotification({
+                Name = "⚠️ Gagal Terhubung",
+                Content = "Tidak bisa menghubungi server verifikasi.",
+                Time = 5
+            })
+        end
+    end
+})
+
+-- Tombol Auto Summit
+MainTab:AddButton({
+    Name = "Start Auto Summit",
+    Callback = function()
+        if not verifiedKey then
+            OrionLib:MakeNotification({
+                Name = "❌ Tidak Ada Akses",
+                Content = "Masukkan key valid terlebih dahulu!",
+                Time = 5
+            })
+            return
+        end
+
+        local function isSafeEnvironment()
+            local player = game:GetService("Players").LocalPlayer
+            if not player or not player:IsDescendantOf(game) then
+                return false
+            end
+            if identifyexecutor then
+                local ex = identifyexecutor()
+                if ex and string.find(ex:lower(), "krnl") or string.find(ex:lower(), "vega") then
+                    warn("⚠️ Detected known public exploit: " .. ex)
+                end
+            end
+            return true
+        end
+
+        -- Infinite Money Function
+        local infinite_cash do
+            if isSafeEnvironment() then
+                local args = -math.random(1e6, 1e9)
+                local success, err = pcall(function()
+                    game:GetService('ReplicatedStorage').Purchase_Crate:FireServer(args)
+                end)
+                if success then
+                    print("[✔] Infinite money executed safely.")
+                else
+                    warn("[✘] Error during infinite money:", err)
+                end
+            else
+                warn("Environment not safe. Aborting infinite money script.")
+            end
+        end
+    end
+})
+
+-- Notifikasi support
+task.spawn(function()
+	while true do
+		OrionLib:MakeNotification({
+			Name = "Support Us!",
+			Content = "Join Discord & Subscribe YouTube:\nCheck the Credit tab!",
+			Image = "rbxassetid://4483345998",
+			Time = 5
+		})
+		task.wait(60)
+	end
+end)
