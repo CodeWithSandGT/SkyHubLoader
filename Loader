@@ -2,10 +2,11 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- Ganti URL ini dengan link bot kamu di Replit
+-- URL verifikasi dan loader
 local verificationURL = "https://skyhub-web.vercel.app/api/verify?key="
+local loaderURL = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/Loader2"
 
--- Library Orion
+-- Library UI
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({
     Name = "SkyHub",
@@ -30,45 +31,67 @@ local CreditTab = Window:MakeTab({
 CreditTab:AddLabel("Join our Discord: https://dsc.gg/skyhubs")
 CreditTab:AddLabel("Youtube: https://youtube.com/@skyhubcommunitys")
 
--- Variabel untuk menyimpan key valid
-local verifiedKey = nil
+-- Fungsi untuk verifikasi key
+local function verifyKey(key)
+	local success, response = pcall(function()
+		return game:HttpGet(verificationURL .. key)
+	end)
 
--- Input Key
+	if success and response then
+		local result = HttpService:JSONDecode(response)
+		if result.success then
+			return true
+		end
+	end
+	return false
+end
+
+-- Fungsi untuk load script utama
+local function loadMainScript()
+	OrionLib:MakeNotification({
+		Name = "SkyHub Loader",
+		Content = "Memuat script utama...",
+		Time = 4
+	})
+	pcall(function()
+		loadstring(game:HttpGet(loaderURL))()
+	end)
+end
+
+-- Coba baca key dari file (auto-login)
+local savedKey
+if pcall(function() return readfile("skyhub_key.txt") end) then
+	savedKey = readfile("skyhub_key.txt")
+	if verifyKey(savedKey) then
+		loadMainScript()
+		return -- stop Orion UI karena loader sudah jalan
+	end
+end
+
+-- Jika tidak ada key / expired, munculkan input textbox
 MainTab:AddTextbox({
     Name = "Masukkan Key SkyHub",
     Default = "",
     TextDisappear = false,
     Callback = function(keyInput)
-        local success, response = pcall(function()
-            return game:HttpGet(verificationURL .. keyInput)
-        end)
+        if verifyKey(keyInput) then
+            OrionLib:MakeNotification({
+                Name = "✅ Key Valid",
+                Content = "Akses diberikan. Menyimpan dan memuat...",
+                Time = 4
+            })
 
-        if success and response then
-            local result = HttpService:JSONDecode(response)
-            if result.success then
-                verifiedKey = keyInput
-                OrionLib:MakeNotification({
-                    Name = "✅ Key Valid",
-                    Content = "Akses diberikan untuk fitur SkyHub.",
-                    Time = 5
-                })
+            -- Simpan key ke file
+            pcall(function()
+                writefile("skyhub_key.txt", keyInput)
+            end)
 
-                -- ✅ PANGGIL LOADER UTAMA
-                pcall(function()
-                    loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/Loader2"))()
-                end)
-
-            else
-                OrionLib:MakeNotification({
-                    Name = "❌ Key Invalid",
-                    Content = "Key salah atau sudah expired.",
-                    Time = 5
-                })
-            end
+            -- Load loader
+            loadMainScript()
         else
             OrionLib:MakeNotification({
-                Name = "⚠️ Gagal Terhubung",
-                Content = "Tidak bisa menghubungi server verifikasi.",
+                Name = "❌ Key Invalid",
+                Content = "Key salah atau sudah expired.",
                 Time = 5
             })
         end
