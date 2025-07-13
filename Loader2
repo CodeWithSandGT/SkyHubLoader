@@ -1,8 +1,8 @@
 local placeId = game.PlaceId
 
 local scriptList = {
-    [123456789] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/GunungTalamau.lua",
-    [987654321] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/GunungKerinci.lua",
+    [86710642002144] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/refs/heads/main/GunungTalamau",
+    [73010525850196] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/refs/heads/main/DesertDetector",
     [111111111] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/AutoFarming.lua",
 }
 
