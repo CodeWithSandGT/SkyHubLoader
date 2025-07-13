@@ -1,0 +1,20 @@
+local placeId = game.PlaceId
+
+local scriptList = {
+    [123456789] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/GunungTalamau.lua",
+    [987654321] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/GunungKerinci.lua",
+    [111111111] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/main/AutoFarming.lua",
+}
+
+local selectedURL = scriptList[placeId]
+
+if selectedURL then
+    loadstring(game:HttpGet(selectedURL))()
+else
+    warn("❌ Game ini belum didukung oleh SkyHub Loader.")
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "SkyHub",
+        Text = "Game ini belum didukung!",
+        Duration = 5
+    })
+end
