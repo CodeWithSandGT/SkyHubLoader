@@ -3,7 +3,7 @@ local placeId = game.PlaceId
 local scriptList = {
     [86710642002144] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/refs/heads/main/GunungTalamau",
     [73010525850196] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/refs/heads/main/DesertDetector",
-    [6911148748] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/refs/heads/main/CDID",
+    [2640407187] = "https://raw.githubusercontent.com/CodeWithSandGT/SkyHubLoader/refs/heads/main/CDID",
 }
 
 local selectedURL = scriptList[placeId]
