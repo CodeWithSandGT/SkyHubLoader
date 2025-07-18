@@ -133,6 +133,33 @@ MainTab:AddToggle({
     end
 })
 
+-- ✅ Tombol Teleport ke NPC
+MainTab:AddButton({
+    Name = "Teleport to NPC",
+    Callback = function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local target = workspace:FindFirstChild("Event") and workspace.Event:FindFirstChild("NPC") and workspace.Event.NPC:FindFirstChild("DA0ZA")
+        
+        if root and target and target:IsA("BasePart") then
+            root.CFrame = target.CFrame + Vector3.new(0, 3, 0)
+            OrionLib:MakeNotification({
+                Name = "Teleported",
+                Content = "Berhasil teleport ke NPC DA0ZA",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "Error",
+                Content = "NPC tidak ditemukan!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        end
+    end
+})
+
 -- Tab Kredit
 local CreditTab = Window:MakeTab({
     Name = "Credit",
